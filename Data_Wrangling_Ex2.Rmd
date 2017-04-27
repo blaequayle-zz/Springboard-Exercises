@@ -1,0 +1,75 @@
+---
+title: "Data_Wrangling_Ex2"
+author: "Blae Quayle"
+date: "27 April 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+# Data Wrangling Exercise 2
+
+## Step 0: Load the data into R studio and relevant packages
+
+```{r message=FALSE, warning=FALSE}
+library(readr)
+library(dplyr)
+library(tidyr)
+
+titanic <- read.csv("~/Documents/Work/Data Science/Data_Wrangling_Ex2/titanic3.csv")
+data.frame(titanic)
+tbl_df(titanic)
+```
+
+## Step 1: Find missing values and replace them with S in embark variable
+
+```{r}
+titanic_embarked <- titanic %>%
+  mutate(embarked = sub("^$", "S", embarked))
+```
+
+## Step 2: Find mean of age column and use to populate missing values
+
+```{r}
+mean_age <- mean(titanic$age, na.rm = TRUE)
+print(mean_age)
+
+titanic_ages <- titanic_embarked %>%
+  replace_na(list(age = mean_age))
+```
+
+The mean of the ages is `r mean_age`
+The median of the ages is `r median_age`
+
+The median is probably more appropriate here as the ages are skewed to the left ie. younger.
+Using the mean gives equal weight to the oldest people, who make up a smaller proportion.
+
+## Step 3: Fill empty slots in boat column with a dummy value
+
+```{r}
+titanic_lifeboats <- titanic_ages %>%
+  mutate(boat = sub("^$", "None", boat))  
+```
+
+## Step 4: What does a missing cabin value mean and does it make sense to fill it in?
+
+Missing values could be filled with 'Unknown' but it wouldn't make the dataset clearer.
+Missing values could indicate non-survival, therefore no record of their cabin number.
+
+### Create a new column has_cabin_number which has 1 if there is a cabin numnber and 0 otherwise
+
+```{r}
+titanic_cabin <- titanic_lifeboats %>%
+  mutate(has_cabin_number = ifelse(cabin == "", 0, 1))
+```
+
+The majority of people who died do not have a cabin number stated.
+
+## Step 5: Save new data file as .csv
+
+```{r}
+write.csv(titanic_cabin, "titanic_clean.csv")
+```
+
